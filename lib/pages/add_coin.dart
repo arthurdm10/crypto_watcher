@@ -13,10 +13,13 @@ class AddCoin extends StatefulWidget {
 class _AddCoinState extends State<AddCoin> {
   String _searchCoinName;
   DateTime _lastUpdate;
+  TextEditingController _inputController;
 
   @override
   void initState() {
     _lastUpdate = DateTime.now();
+    _inputController = TextEditingController();
+    _inputController.addListener(_search);
     super.initState();
   }
 
@@ -36,7 +39,7 @@ class _AddCoinState extends State<AddCoin> {
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 40),
             child: TextField(
-              onChanged: _search,
+              controller: _inputController,
               decoration: InputDecoration(
                 enabledBorder: UnderlineInputBorder(
                   borderSide: BorderSide(color: AppColors.backgroundLight),
@@ -46,6 +49,10 @@ class _AddCoinState extends State<AddCoin> {
                 ),
                 hintText: "Search...",
                 hintStyle: TextStyle(color: AppColors.backgroundLight),
+                suffix: GestureDetector(
+                  onTap: () => _inputController.clear(),
+                  child: Icon(Icons.clear, color: AppColors.backgroundLight),
+                ),
               ),
               style: TextStyle(color: AppColors.secondaryDark),
             ),
@@ -63,8 +70,9 @@ class _AddCoinState extends State<AddCoin> {
     );
   }
 
-  void _search(final String text) {
+  void _search() {
     final now = DateTime.now();
+    final text = _inputController.text;
     if (now.isAfter(_lastUpdate.add(Duration(milliseconds: 300)))) {
       setState(() {
         _searchCoinName = text;
@@ -197,7 +205,6 @@ class _CoinsListState extends State<CoinsList> {
           } else {
             coinsProvider.removeCoin(coin["id"]);
           }
-          // setState(() {});
         },
         activeColor: AppColors.secondaryColor,
         inactiveThumbColor: AppColors.backgroundLight,

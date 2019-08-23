@@ -6,21 +6,22 @@ class Coins extends ChangeNotifier {
   SharedPreferences pref;
   List<String> userCoins;
   Map<String, Map<String, dynamic>> loadedCoins;
-  DateTime _cacheTimeExp;
 
   Future loadPreferences() async {
     loadedCoins = Map<String, Map<String, dynamic>>();
     pref = await SharedPreferences.getInstance();
     userCoins = pref.getStringList("coins");
-    // final res = await CoincapApi.assets(ids: userCoins);
-    // loadedCoins = res["data"];
   }
 
-  Future<Map<String, dynamic>> fetchCoinsData() async {
-    _cacheTimeExp = DateTime.now().add(Duration(seconds: 30));
-    final coinData = await CoincapApi.assets(ids: userCoins);
-    return coinData["data"];
+  Future fetchCoinsData() async {
+    if (userCoins.isNotEmpty) {
+      final coinData = await CoincapApi.assets(ids: userCoins);
+      return coinData["data"];
+    }
+    return [];
   }
+
+  void refresh() => this.notifyListeners();
 
   void addCoin(final String coinId) async {
     userCoins.add(coinId);
@@ -31,6 +32,6 @@ class Coins extends ChangeNotifier {
   void removeCoin(final String coinId) async {
     userCoins.remove(coinId);
     await pref.setStringList("coins", userCoins);
-    notifyListeners();
+    // notifyListeners();
   }
 }
