@@ -58,7 +58,7 @@ class _CandleChartState extends State<CandleChart> {
     }
     return Container(
       margin: const EdgeInsets.only(bottom: 25),
-      height: 400,
+      height: 300,
       child: FutureBuilder(
         future: CoincapApi.candles(
             exchangeId: widget.exchangeId,
