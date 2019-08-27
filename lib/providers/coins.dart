@@ -7,6 +7,15 @@ class Coins extends ChangeNotifier {
   List<String> userCoins;
   Map<String, Map<String, dynamic>> loadedCoins;
 
+  Map<String, Map<String, dynamic>> exchanges;
+
+  Coins() {
+    CoincapApi.exchanges().then((response) => exchanges = Map.fromIterable(
+        response["data"],
+        key: (ex) => ex["exchangeId"],
+        value: (ex) => ex));
+  }
+
   Future loadPreferences() async {
     loadedCoins = Map<String, Map<String, dynamic>>();
     pref = await SharedPreferences.getInstance();
@@ -19,6 +28,11 @@ class Coins extends ChangeNotifier {
       return coinData["data"];
     }
     return [];
+  }
+
+  Future fetchCoinData(String coinId) async {
+    final coinData = await CoincapApi.assets(assetId: coinId);
+    return coinData["data"];
   }
 
   void refresh() => this.notifyListeners();

@@ -68,7 +68,7 @@ class CoincapApi {
   }
 
   static Future<Map> exchanges({String exchangeId}) async {
-    final path = '/v2/exchanges/' + exchangeId ?? '';
+    final path = '/v2/exchanges/' + (exchangeId == null ? '' : exchangeId);
 
     final res = await ApiRequest().get().path(path).send();
     if (res.statusCode == HttpStatus.ok) {
@@ -79,18 +79,14 @@ class CoincapApi {
   }
 
   static Future<Map> markets({
-    @required String exchangeId,
-    @required String baseId,
-    @required String quoteId,
+    String exchangeId,
+    String baseId,
+    String quoteId,
   }) async {
-    assert(exchangeId != null);
-    assert(baseId != null);
-    assert(quoteId != null);
-
     final Map<String, String> query = {
-      "exchange": exchangeId,
-      "baseId": baseId,
-      "quoteId": quoteId,
+      "exchange": exchangeId ?? '',
+      "baseId": baseId ?? '',
+      "quoteId": quoteId ?? '',
     };
 
     final res =

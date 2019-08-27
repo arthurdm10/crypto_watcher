@@ -1,6 +1,6 @@
 import 'package:crypto_watcher/components/loading_indicator.dart';
 import 'package:crypto_watcher/pages/add_coin.dart';
-import 'package:crypto_watcher/pages/coin_info.dart';
+import 'package:crypto_watcher/pages/coin_info/coin_info.dart';
 import 'package:crypto_watcher/providers/coins.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -74,8 +74,14 @@ class HomePage extends StatelessWidget {
                           child: ListTile(
                             onTap: () => Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (_) =>
-                                    CoinInfo(coin["id"], coinSymbol, coin["name"]),
+                                builder: (_) => ChangeNotifierProvider.value(
+                                  value: coins,
+                                  child: CoinInfo(
+                                    coin["id"],
+                                    coinSymbol,
+                                    coin["name"],
+                                  ),
+                                ),
                               ),
                             ),
                             contentPadding:
