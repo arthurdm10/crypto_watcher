@@ -1,5 +1,5 @@
 import 'package:crypto_watcher/pages/coin_info/components/candle_chart.dart';
-import 'package:crypto_watcher/pages/coin_info/components/exchange_list.dart';
+import 'package:crypto_watcher/pages/coin_info/components/coin_markets.dart';
 import 'package:crypto_watcher/pages/coin_info/components/intervals_list.dart';
 import 'package:crypto_watcher/pages/coin_info/components/pair_data.dart';
 import 'package:crypto_watcher/pages/coin_info/pages/alerts.dart';
@@ -62,28 +62,20 @@ class _CoinInfoState extends State<CoinInfo> with SingleTickerProviderStateMixin
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Expanded(child: PairData(_pairData)),
-                      ExchangeList(
-                        widget._coinSymbol,
-                        widget._coinId,
-                        onExchangeChanged: (exchangeId) {
-                          setState(() {
-                            _selectedExchange = exchangeId;
-                          });
-                        },
-                        onCoinPairChanged: (pairId, data) {
-                          setState(() {
-                            _selectedCoinPair = pairId;
-                            _pairData = data;
-                          });
-                        },
-                      ),
-                    ],
+                  CoinMarkets(
+                    widget._coinSymbol,
+                    widget._coinId,
+                    onChanged: (exchangeId, pairId, data) {
+                      setState(() {
+                        _selectedExchange = exchangeId;
+                        _selectedCoinPair = pairId;
+                        _pairData = data;
+                      });
+                    },
                   ),
-                  SizedBox(height: 35),
+                  SizedBox(height: 5),
+                  PairData(_pairData),
+                  SizedBox(height: 15),
                   ChartIntervalList(
                     onSelected: (interval) {
                       setState(() {

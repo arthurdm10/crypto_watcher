@@ -11,77 +11,82 @@ class PairData extends StatelessWidget {
     if (_data == null) {
       return Container();
     }
-
+    final quotePrice = double.parse(_data["priceQuote"]);
+    final quotePriceStr = quotePrice < 1.0
+        ? quotePrice.toStringAsFixed(8)
+        : quotePrice.toStringAsFixed(2);
     return Container(
       margin: const EdgeInsets.only(left: 5, top: 2),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          SizedBox(height: 5),
-          Text(
-            '\$${double.parse(_data["priceUsd"]).toStringAsFixed(2)}',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-            ),
-          ),
-          SizedBox(height: 5),
           Text.rich(
             TextSpan(
-              text: '${_data["quoteSymbol"]} ',
+              text: '\$${double.parse(_data["priceUsd"]).toStringAsFixed(2)}\n',
               style: TextStyle(
                 color: Colors.white,
+                fontSize: 24,
                 fontWeight: FontWeight.bold,
+                letterSpacing: 2,
               ),
               children: [
                 TextSpan(
-                  text: double.parse(_data["priceQuote"]).toStringAsFixed(2),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 5),
-          Text.rich(
-            TextSpan(
-              text: 'Exchange volume: ',
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.secondaryDark,
-                fontWeight: FontWeight.bold,
-              ),
-              children: [
-                TextSpan(
-                  text:
-                      '${double.parse(_data["percentExchangeVolume"]).toStringAsFixed(4)}%',
+                  text: '${_data["quoteSymbol"]} $quotePriceStr',
                   style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.normal,
+                    fontSize: 11,
+                    letterSpacing: 1,
                   ),
                 ),
               ],
             ),
+            textAlign: TextAlign.center,
           ),
-          Text.rich(
-            TextSpan(
-              text: '24H USD volume: ',
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.secondaryDark,
-                fontWeight: FontWeight.bold,
-              ),
-              children: [
+          SizedBox(height: 35),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: <Widget>[
+              Text.rich(
                 TextSpan(
-                  text:
-                      '\$${double.parse(_data["volumeUsd24Hr"]).toStringAsFixed(2)}',
+                  text: 'Exchange volume: ',
                   style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.normal,
+                    fontSize: 13,
+                    color: AppColors.secondaryDark,
+                    fontWeight: FontWeight.bold,
                   ),
+                  children: [
+                    TextSpan(
+                      text:
+                          '${double.parse(_data["percentExchangeVolume"]).toStringAsFixed(4)}%',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.normal,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          )
+              ),
+              Text.rich(
+                TextSpan(
+                  text: '24H USD volume: ',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: AppColors.secondaryDark,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  children: [
+                    TextSpan(
+                      text:
+                          '\$${double.parse(_data["volumeUsd24Hr"]).toStringAsFixed(2)}',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            ],
+          ),
         ],
       ),
     );
