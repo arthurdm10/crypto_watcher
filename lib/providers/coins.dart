@@ -1,30 +1,50 @@
 import 'package:crypto_watcher/services/coincap_api.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite/sqflite.dart' as sqlite;
 
 class Coins extends ChangeNotifier {
-  SharedPreferences pref;
-  List<String> userCoins;
+  static const String DB_NAME = "watcher.db";
+
+  List<Map> userCoins;
   Map<String, Map<String, dynamic>> loadedCoins;
 
   Map<String, Map<String, dynamic>> exchanges;
 
-  Coins() {
-    CoincapApi.exchanges().then((response) => exchanges = Map.fromIterable(
-        response["data"],
-        key: (ex) => ex["exchangeId"],
-        value: (ex) => ex));
+  sqlite.Database db;
+
+  Future _createDb(sqlite.Database db, int v) async {
+    await db.execute('''
+      CREATE TABLE user_coins(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            coin_id TEXT NOT NULL,
+            coin_name TEXT NOT NULL,
+            coin_symbol TEXT NOT NULL);
+    ''');
+    await db.execute('''
+      CREATE TABLE user_alerts(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            price REAL NOT NULL,
+            coin_id TEXT NOT NULL);
+    ''');
   }
 
-  Future loadPreferences() async {
-    loadedCoins = Map<String, Map<String, dynamic>>();
-    pref = await SharedPreferences.getInstance();
-    userCoins = pref.getStringList("coins");
+  Coins() {
+    CoincapApi.exchanges().then(
+      (response) => exchanges = Map.fromIterable(response["data"],
+          key: (ex) => ex["exchangeId"], value: (ex) => ex),
+    );
+  }
+
+  Future loadDb() async {
+    db = await sqlite.openDatabase(DB_NAME, onCreate: _createDb, version: 3);
+    userCoins = await db.query("user_coins");
   }
 
   Future fetchCoinsData() async {
     if (userCoins.isNotEmpty) {
-      final coinData = await CoincapApi.assets(ids: userCoins);
+      final coinData = await CoincapApi.assets(
+          ids: userCoins.map<String>((coin) => coin["coin_id"]).toList());
       return coinData["data"];
     }
     return [];
@@ -37,15 +57,21 @@ class Coins extends ChangeNotifier {
 
   void refresh() => this.notifyListeners();
 
-  void addCoin(final String coinId) async {
-    userCoins.add(coinId);
-    await pref.setStringList("coins", userCoins);
+  void addCoin(Map coin) async {
+    await db.insert("user_coins", {
+      "coin_id": coin["id"],
+      "coin_name": coin["name"],
+      "coin_symbol": coin["symbol"],
+    });
+    userCoins = await db.query("user_coins");
     notifyListeners();
   }
 
-  void removeCoin(final String coinId) async {
-    userCoins.remove(coinId);
-    await pref.setStringList("coins", userCoins);
-    // notifyListeners();
+  void removeCoin(final String coinId, {final bool notify = true}) async {
+    await db.delete("user_coins", where: "coin_id = ?", whereArgs: [coinId]);
+    userCoins = await db.query("user_coins");
+    if (notify) {
+      notifyListeners();
+    }
   }
 }

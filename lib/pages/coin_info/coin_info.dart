@@ -2,8 +2,11 @@ import 'package:crypto_watcher/pages/coin_info/components/candle_chart.dart';
 import 'package:crypto_watcher/pages/coin_info/components/exchange_list.dart';
 import 'package:crypto_watcher/pages/coin_info/components/intervals_list.dart';
 import 'package:crypto_watcher/pages/coin_info/components/pair_data.dart';
+import 'package:crypto_watcher/pages/coin_info/pages/alerts.dart';
+import 'package:crypto_watcher/providers/alerts.dart';
 import 'package:crypto_watcher/styles/colors.dart' as AppColors;
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class CoinInfo extends StatefulWidget {
   final String _coinId;
@@ -18,7 +21,7 @@ class CoinInfo extends StatefulWidget {
 
 class _CoinInfoState extends State<CoinInfo> with SingleTickerProviderStateMixin {
   ChartInterval _interval = ChartInterval.m15;
-  String _selectedExchange = "poloniex";
+  String _selectedExchange;
   String _selectedCoinPair;
   Map<String, dynamic> _pairData;
   TabController _tabController;
@@ -43,13 +46,10 @@ class _CoinInfoState extends State<CoinInfo> with SingleTickerProviderStateMixin
         ),
         bottom: TabBar(
           controller: _tabController,
+          indicatorColor: AppColors.secondaryDark,
           tabs: <Widget>[
-            Tab(
-              text: "Chart",
-            ),
-            Tab(
-              text: "Alerts",
-            ),
+            Tab(text: "Chart"),
+            Tab(text: "Alerts"),
           ],
         ),
       ),
@@ -102,7 +102,10 @@ class _CoinInfoState extends State<CoinInfo> with SingleTickerProviderStateMixin
               ),
             ),
           ),
-          Container(),
+          ChangeNotifierProvider(
+            builder: (_) => AlertsProvider(widget._coinId),
+            child: AlertsPage(),
+          ),
         ],
       ),
     );

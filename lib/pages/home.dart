@@ -68,7 +68,7 @@ class HomePage extends StatelessWidget {
                           direction: DismissDirection.endToStart,
                           dismissThresholds: {DismissDirection.endToStart: 0.3},
                           onDismissed: (_) {
-                            coins.removeCoin(coin["id"]);
+                            coins.removeCoin(coin["id"], notify: false);
                           },
                           resizeDuration: Duration(milliseconds: 80),
                           child: ListTile(

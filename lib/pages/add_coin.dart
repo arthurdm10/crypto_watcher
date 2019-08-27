@@ -104,7 +104,7 @@ class _CoinsListState extends State<CoinsList> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration(milliseconds: 500), loadCoins);
+    Future.delayed(Duration(milliseconds: 100), loadCoins);
   }
 
   void loadCoins() {
@@ -201,14 +201,17 @@ class _CoinsListState extends State<CoinsList> {
       child: SwitchListTile(
         onChanged: (add) {
           if (add) {
-            coinsProvider.addCoin(coin["id"]);
+            // coinsProvider.addCoin(coin["id"]);
+            coinsProvider.addCoin(coin);
           } else {
             coinsProvider.removeCoin(coin["id"]);
           }
         },
         activeColor: AppColors.secondaryColor,
         inactiveThumbColor: AppColors.backgroundLight,
-        value: addedCoins.contains(coin["id"]),
+        value:
+            addedCoins.indexWhere((userCoin) => userCoin["coin_id"] == coin["id"]) !=
+                -1,
         title: Text(
           '$coinName',
           style:

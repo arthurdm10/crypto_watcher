@@ -6,7 +6,10 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-void main() => runApp(MyApp());
+void main() {
+  Provider.debugCheckInvalidValueType = null;
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
   @override
@@ -19,7 +22,7 @@ class MyApp extends StatelessWidget {
       ),
       title: 'Material App',
       home: FutureBuilder(
-        future: coins.loadPreferences(),
+        future: coins.loadDb(),
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: LoadingIndicator());
