@@ -1,5 +1,6 @@
 import 'package:crypto_watcher/providers/coins.dart';
 import 'package:crypto_watcher/services/coincap_api.dart';
+import 'package:crypto_watcher/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:crypto_watcher/styles/colors.dart' as AppColors;
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
@@ -24,9 +25,10 @@ class CoinMarkets extends StatefulWidget {
 
 class _CoinMarketsState extends State<CoinMarkets> {
   String _selectedExchange;
-  String _selectedCoinPair;
+  Map _selectedCoinPair;
 
   Future _coinMarkets;
+
   final Map exchanges = Map<String, Map>();
 
   @override
@@ -43,11 +45,9 @@ class _CoinMarketsState extends State<CoinMarkets> {
       });
       setState(() {
         _selectedExchange = exchanges.keys.first;
-        _selectedCoinPair = exchanges[_selectedExchange].keys.first;
+        _selectedCoinPair = exchanges[_selectedExchange].values.first;
       });
-      widget._onChanged(_selectedExchange, _selectedCoinPair,
-          exchanges[_selectedExchange][_selectedCoinPair]);
-
+      widget._onChanged(_selectedCoinPair);
       return exchanges;
     });
     super.initState();
@@ -64,9 +64,8 @@ class _CoinMarketsState extends State<CoinMarkets> {
           return Container();
         }
 
-        Map data = snapshot.data;
         final exchangeName = coinsProvider.exchanges[_selectedExchange]["name"];
-        final coinPairSymbol = data[_selectedExchange].values.first["quoteSymbol"];
+        final coinPairSymbol = _selectedCoinPair["quoteSymbol"];
 
         return GestureDetector(
           onTap: () {
@@ -128,70 +127,74 @@ class _CoinMarketsState extends State<CoinMarkets> {
             height: screenSize.height,
             width: screenSize.width,
             child: CustomScrollView(
-              slivers: exchanges.keys.map<Widget>(
-                (exchangeId) {
-                  return SliverStickyHeader(
-                    header: Container(
-                      padding:
-                          const EdgeInsets.symmetric(vertical: 10, horizontal: 5),
-                      color: AppColors.backgroundColor,
-                      child: Text(
-                        coinsProvider.exchanges[exchangeId]["name"],
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
+              slivers: [
+                ...exchanges.keys
+                    .map<Widget>(
+                      (exchangeId) => _buildSliverList(
+                        exchangeId,
+                        coinsProvider,
                       ),
-                    ),
-                    sliver: SliverFixedExtentList(
-                      itemExtent: 60,
-                      delegate: SliverChildListDelegate(
-                        ListTile.divideTiles(
-                          color: AppColors.backgroundLight,
-                          tiles: exchanges[exchangeId].values.map<Widget>(
-                            (coinPair) {
-                              final quoteSymbol = coinPair["quoteSymbol"];
-                              final quotePrice =
-                                  double.parse(coinPair["priceQuote"]);
-                              final quotePriceStr = quotePrice < 1.0
-                                  ? quotePrice.toStringAsFixed(8)
-                                  : quotePrice.toStringAsFixed(2);
-
-                              return ListTile(
-                                onTap: () {
-                                  setState(() {
-                                    _selectedExchange = exchangeId;
-                                    _selectedCoinPair = coinPair["quoteId"];
-                                  });
-                                  widget._onChanged(
-                                      exchangeId, coinPair["quoteId"], coinPair);
-                                  Navigator.of(context).pop();
-                                },
-                                title: Text(
-                                  '${widget._coinSymbol}/$quoteSymbol',
-                                  style: TextStyle(color: AppColors.secondaryDark),
-                                ),
-                                subtitle: Text(
-                                  '$quotePriceStr $quoteSymbol',
-                                  style: TextStyle(
-                                    color: Colors.white60,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              );
-                            },
-                          ).toList(),
-                        ).toList(),
-                      ),
-                    ),
-                  );
-                },
-              ).toList(),
+                    )
+                    .toList()
+              ],
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildSliverList(String exchangeId, Coins coinsProvider) {
+    return SliverStickyHeader(
+      header: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 5),
+        color: AppColors.backgroundColor,
+        child: Text(
+          coinsProvider.exchanges[exchangeId]["name"],
+          style: TextStyle(
+            color: Colors.white70,
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+      sliver: SliverFixedExtentList(
+        itemExtent: 60,
+        delegate: SliverChildListDelegate(
+          ListTile.divideTiles(
+            color: AppColors.backgroundLight,
+            tiles: exchanges[exchangeId].values.map<Widget>(
+              (coinPair) {
+                final quoteSymbol = coinPair["quoteSymbol"];
+                final quotePriceStr = formatQuotePrice(coinPair["priceQuote"]);
+
+                return ListTile(
+                  onTap: () {
+                    setState(() {
+                      _selectedExchange = exchangeId;
+                      _selectedCoinPair = coinPair;
+                    });
+                    widget._onChanged(_selectedCoinPair);
+
+                    Navigator.of(context).pop();
+                  },
+                  title: Text(
+                    '${widget._coinSymbol}/$quoteSymbol',
+                    style: TextStyle(color: AppColors.secondaryDark),
+                  ),
+                  subtitle: Text(
+                    '$quotePriceStr $quoteSymbol',
+                    style: TextStyle(
+                      color: Colors.white60,
+                      fontSize: 11,
+                    ),
+                  ),
+                );
+              },
+            ).toList(),
+          ).toList(),
+        ),
+      ),
     );
   }
 }

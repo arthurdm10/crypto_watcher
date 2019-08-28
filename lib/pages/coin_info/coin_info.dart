@@ -4,6 +4,7 @@ import 'package:crypto_watcher/pages/coin_info/components/intervals_list.dart';
 import 'package:crypto_watcher/pages/coin_info/components/pair_data.dart';
 import 'package:crypto_watcher/pages/coin_info/pages/alerts.dart';
 import 'package:crypto_watcher/providers/alerts.dart';
+import 'package:crypto_watcher/providers/coins.dart';
 import 'package:crypto_watcher/styles/colors.dart' as AppColors;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -20,10 +21,6 @@ class CoinInfo extends StatefulWidget {
 }
 
 class _CoinInfoState extends State<CoinInfo> with SingleTickerProviderStateMixin {
-  ChartInterval _interval = ChartInterval.m15;
-  String _selectedExchange;
-  String _selectedCoinPair;
-  Map<String, dynamic> _pairData;
   TabController _tabController;
 
   @override
@@ -56,49 +53,83 @@ class _CoinInfoState extends State<CoinInfo> with SingleTickerProviderStateMixin
       body: TabBarView(
         controller: _tabController,
         children: [
-          SingleChildScrollView(
-            child: Container(
-              margin: const EdgeInsets.only(top: 5),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  CoinMarkets(
-                    widget._coinSymbol,
-                    widget._coinId,
-                    onChanged: (exchangeId, pairId, data) {
-                      setState(() {
-                        _selectedExchange = exchangeId;
-                        _selectedCoinPair = pairId;
-                        _pairData = data;
-                      });
-                    },
-                  ),
-                  SizedBox(height: 5),
-                  PairData(_pairData),
-                  SizedBox(height: 15),
-                  ChartIntervalList(
-                    onSelected: (interval) {
-                      setState(() {
-                        _interval = interval;
-                      });
-                    },
-                  ),
-                  SizedBox(height: 15),
-                  CandleChart(
-                    exchangeId: _selectedExchange,
-                    coinId: widget._coinId,
-                    coinPairId: _selectedCoinPair,
-                    interval: _interval,
-                  ),
-                ],
-              ),
+          CoinChart(widget._coinId, widget._coinSymbol, widget._coinName),
+          ChangeNotifierProvider(
+            builder: (_) => AlertsProvider(widget._coinId, widget._coinSymbol),
+            child: Provider.value(
+              value: Provider.of<Coins>(context),
+              child: AlertsPage(),
             ),
           ),
-          ChangeNotifierProvider(
-            builder: (_) => AlertsProvider(widget._coinId),
-            child: AlertsPage(),
-          ),
         ],
+      ),
+    );
+  }
+}
+
+class CoinChart extends StatefulWidget {
+  final String _coinId;
+  final String _coinSymbol;
+  final String _coinName;
+
+  CoinChart(this._coinId, this._coinSymbol, this._coinName);
+
+  @override
+  _CoinChartState createState() => _CoinChartState();
+}
+
+class _CoinChartState extends State<CoinChart>
+    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin<CoinChart> {
+  ChartInterval _interval = ChartInterval.m15;
+  String _selectedExchange;
+  String _selectedCoinPair;
+  Map<String, dynamic> _pairData;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return Scaffold(
+      backgroundColor: AppColors.backgroundColor,
+      body: SingleChildScrollView(
+        child: Container(
+          margin: const EdgeInsets.only(top: 5),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              CoinMarkets(
+                widget._coinSymbol,
+                widget._coinId,
+                onChanged: (data) {
+                  setState(() {
+                    _selectedExchange = data["exchangeId"];
+                    _selectedCoinPair = data["quoteId"];
+                    _pairData = data;
+                  });
+                },
+              ),
+              SizedBox(height: 5),
+              PairData(_pairData),
+              SizedBox(height: 15),
+              ChartIntervalList(
+                onSelected: (interval) {
+                  setState(() {
+                    _interval = interval;
+                  });
+                },
+              ),
+              SizedBox(height: 15),
+              CandleChart(
+                exchangeId: _selectedExchange,
+                coinId: widget._coinId,
+                coinPairId: _selectedCoinPair,
+                interval: _interval,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -25,14 +25,20 @@ class Coins extends ChangeNotifier {
       CREATE TABLE user_alerts(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             price REAL NOT NULL,
+            type INTEGER NOT NULL,
+            interval INTEGER NOT NULL,
+            exchange_id TEXT NOT NULL,
             coin_id TEXT NOT NULL);
     ''');
   }
 
   Coins() {
     CoincapApi.exchanges().then(
-      (response) => exchanges = Map.fromIterable(response["data"],
-          key: (ex) => ex["exchangeId"], value: (ex) => ex),
+      (response) => exchanges = Map.fromIterable(
+        response["data"],
+        key: (ex) => ex["exchangeId"],
+        value: (ex) => ex,
+      ),
     );
   }
 

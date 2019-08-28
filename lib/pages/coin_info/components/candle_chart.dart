@@ -1,6 +1,7 @@
 import 'package:crypto_watcher/components/loading_indicator.dart';
 import 'package:crypto_watcher/pages/coin_info/components/intervals_list.dart';
 import 'package:crypto_watcher/services/coincap_api.dart';
+import 'package:crypto_watcher/styles/colors.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_candlesticks/flutter_candlesticks.dart';
@@ -75,7 +76,18 @@ class _CandleChartState extends State<CandleChart> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: LoadingIndicator());
           }
+
           List data = snapshot.data["data"];
+
+          if (data.isEmpty) {
+            return Center(
+              child: Text(
+                "Couldn't get data",
+                style: TextStyle(color: secondaryDark),
+              ),
+            );
+          }
+
           double high = -1;
           double low = double.infinity;
 

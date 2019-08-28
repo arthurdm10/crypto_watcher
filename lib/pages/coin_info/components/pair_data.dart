@@ -1,3 +1,4 @@
+import 'package:crypto_watcher/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:crypto_watcher/styles/colors.dart' as AppColors;
 
@@ -11,10 +12,8 @@ class PairData extends StatelessWidget {
     if (_data == null) {
       return Container();
     }
-    final quotePrice = double.parse(_data["priceQuote"]);
-    final quotePriceStr = quotePrice < 1.0
-        ? quotePrice.toStringAsFixed(8)
-        : quotePrice.toStringAsFixed(2);
+    final quotePriceStr = formatQuotePrice(_data["priceQuote"]);
+
     return Container(
       margin: const EdgeInsets.only(left: 5, top: 2),
       child: Column(
@@ -30,7 +29,7 @@ class PairData extends StatelessWidget {
               ),
               children: [
                 TextSpan(
-                  text: '${_data["quoteSymbol"]} $quotePriceStr',
+                  text: '$quotePriceStr ${_data["quoteSymbol"]}',
                   style: TextStyle(
                     fontSize: 11,
                     letterSpacing: 1,
@@ -40,14 +39,14 @@ class PairData extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: 35),
+          SizedBox(height: 25),
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
               Text.rich(
                 TextSpan(
-                  text: 'Exchange volume: ',
+                  text: 'Exchange volume\n',
                   style: TextStyle(
                     fontSize: 13,
                     color: AppColors.secondaryDark,
@@ -64,10 +63,11 @@ class PairData extends StatelessWidget {
                     ),
                   ],
                 ),
+                textAlign: TextAlign.center,
               ),
               Text.rich(
                 TextSpan(
-                  text: '24H USD volume: ',
+                  text: '24H USD volume\n',
                   style: TextStyle(
                     fontSize: 13,
                     color: AppColors.secondaryDark,
@@ -84,6 +84,7 @@ class PairData extends StatelessWidget {
                     ),
                   ],
                 ),
+                textAlign: TextAlign.center,
               )
             ],
           ),

@@ -51,7 +51,6 @@ class ApiRequest {
     assert(_path != null);
 
     final httpUrl = Uri.https(_baseUrl, _path, _queryParams);
-
     var response;
 
     if (_method == "GET") {
