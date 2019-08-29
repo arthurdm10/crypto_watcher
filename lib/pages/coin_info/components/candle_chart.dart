@@ -32,8 +32,9 @@ class _CandleChartState extends State<CandleChart> {
   @override
   Widget build(BuildContext context) {
     if (widget._coinId == null || widget.coinPairId == null) {
-      return Center(child: LoadingIndicator());
+      return Container();
     }
+
     Duration candleStart;
     final interval = widget._interval;
     switch (interval) {
@@ -76,7 +77,17 @@ class _CandleChartState extends State<CandleChart> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: LoadingIndicator());
           }
-
+          if (snapshot.hasError) {
+            return Center(
+              child: Text(
+                "Failed to load chart data",
+                style: TextStyle(
+                  color: secondaryDark,
+                  fontSize: 18,
+                ),
+              ),
+            );
+          }
           List data = snapshot.data["data"];
 
           if (data.isEmpty) {

@@ -40,6 +40,19 @@ class HomePage extends StatelessWidget {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return Center(child: LoadingIndicator());
               }
+
+              if (snapshot.hasError) {
+                return Center(
+                  child: Text(
+                    "Failed to get data!",
+                    style: TextStyle(
+                      color: AppColors.secondaryDark,
+                      fontSize: 18,
+                    ),
+                  ),
+                );
+              }
+
               final coinsData = snapshot.data;
               return RefreshIndicator(
                 color: AppColors.secondaryColor,

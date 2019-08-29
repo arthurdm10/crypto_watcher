@@ -28,6 +28,18 @@ class MyApp extends StatelessWidget {
             return Center(child: LoadingIndicator());
           }
 
+          if (snapshot.hasError) {
+            return Center(
+              child: Text(
+                "Failed to load local database",
+                style: TextStyle(
+                  color: AppColors.secondaryDark,
+                  fontSize: 18,
+                ),
+              ),
+            );
+          }
+
           return MultiProvider(
             providers: [
               ChangeNotifierProvider.value(value: coins),

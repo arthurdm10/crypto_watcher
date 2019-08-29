@@ -67,6 +67,18 @@ class _CoinMarketsState extends State<CoinMarkets> {
           return Container();
         }
 
+        if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              "Failed to load market data!",
+              style: TextStyle(
+                color: AppColors.secondaryDark,
+                fontSize: 18,
+              ),
+            ),
+          );
+        }
+
         final exchangeName = coinsProvider.exchanges[_selectedExchange]["name"];
         final coinPairSymbol = _selectedCoinPair["quoteSymbol"];
 

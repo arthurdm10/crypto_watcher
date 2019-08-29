@@ -31,6 +31,18 @@ class AlertsPage extends StatelessWidget {
           return Center(child: LoadingIndicator());
         }
 
+        if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              "Failed to load alerts!",
+              style: TextStyle(
+                color: AppColors.secondaryDark,
+                fontSize: 18,
+              ),
+            ),
+          );
+        }
+
         final alerts = snapshot.data;
 
         return Scaffold(

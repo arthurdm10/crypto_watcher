@@ -119,6 +119,7 @@ class CoincapApi {
       query["start"] = start.toString();
       query["end"] = end.toString();
     }
+
     final res =
         await ApiRequest().get().path('/v2/candles').queryParams(query).send();
     if (res.statusCode == HttpStatus.ok) {

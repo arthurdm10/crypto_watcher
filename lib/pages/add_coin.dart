@@ -88,7 +88,7 @@ class CoinsList extends StatefulWidget {
   _CoinsListState createState() => _CoinsListState();
 }
 
-enum Status { Loading, Done }
+enum Status { Loading, Done, Failed }
 
 class _CoinsListState extends State<CoinsList> {
   static const int LIMIT = 20;
@@ -105,15 +105,21 @@ class _CoinsListState extends State<CoinsList> {
   void initState() {
     super.initState();
     _status = Status.Loading;
-    Future.delayed(Duration(milliseconds: 100), loadCoins);
+    Future.delayed(Duration(milliseconds: 100), _loadCoins);
   }
 
-  void loadCoins() {
+  _loadCoins() async {
     _status = Status.Loading;
     final coinName = Provider.of<String>(context);
     final offset = _searching ? _searchOffset : _offset;
 
-    CoincapApi.assets(searchId: coinName, limit: LIMIT, offset: offset).then((data) {
+    try {
+      final data = await CoincapApi.assets(
+        searchId: coinName,
+        limit: LIMIT,
+        offset: offset,
+      );
+
       setState(() {
         _status = Status.Done;
 
@@ -123,7 +129,11 @@ class _CoinsListState extends State<CoinsList> {
           _searchResult.addAll([...data["data"]]);
         }
       });
-    });
+    } catch (e) {
+      setState(() {
+        _status = Status.Failed;
+      });
+    }
   }
 
   @override
@@ -135,12 +145,23 @@ class _CoinsListState extends State<CoinsList> {
     _searchResult.clear();
 
     _offset = _coins.length;
-    loadCoins();
+    _loadCoins();
     super.didUpdateWidget(oldWidget);
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_status == Status.Failed) {
+      return Center(
+        child: Text(
+          "Failed to get data!",
+          style: TextStyle(
+            color: AppColors.secondaryDark,
+            fontSize: 18,
+          ),
+        ),
+      );
+    }
     return NotificationListener<ScrollNotification>(
       onNotification: _handleScroll,
       child: ListView.builder(
@@ -160,7 +181,7 @@ class _CoinsListState extends State<CoinsList> {
       } else {
         _offset += LIMIT;
       }
-      loadCoins();
+      _loadCoins();
     }
     return true;
   }
