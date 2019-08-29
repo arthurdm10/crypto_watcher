@@ -1,6 +1,8 @@
+import 'dart:async';
+
 import 'package:crypto_watcher/services/coincap_api.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:sqflite/sqflite.dart' as sqlite;
 
 class Coins extends ChangeNotifier {
@@ -24,11 +26,15 @@ class Coins extends ChangeNotifier {
     await db.execute('''
       CREATE TABLE user_alerts(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            price REAL NOT NULL,
+            value REAL NOT NULL,
             type INTEGER NOT NULL,
             interval INTEGER NOT NULL,
             exchange_id TEXT NOT NULL,
-            coin_id TEXT NOT NULL);
+            coin_id TEXT NOT NULL,
+            pair_id TEXT NOT NULL,
+            pair_symbol TEXT NOT NULL,
+            current_value REAL NOT NULL
+            );
     ''');
   }
 
@@ -73,7 +79,7 @@ class Coins extends ChangeNotifier {
     notifyListeners();
   }
 
-  void removeCoin(final String coinId, {final bool notify = true}) async {
+  removeCoin(final String coinId, {final bool notify = true}) async {
     await db.delete("user_coins", where: "coin_id = ?", whereArgs: [coinId]);
     userCoins = await db.query("user_coins");
     if (notify) {

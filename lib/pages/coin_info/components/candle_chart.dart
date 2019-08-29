@@ -82,7 +82,7 @@ class _CandleChartState extends State<CandleChart> {
           if (data.isEmpty) {
             return Center(
               child: Text(
-                "Couldn't get data",
+                "Couldn't get enough data",
                 style: TextStyle(color: secondaryDark),
               ),
             );

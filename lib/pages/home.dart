@@ -1,6 +1,7 @@
 import 'package:crypto_watcher/components/loading_indicator.dart';
 import 'package:crypto_watcher/pages/add_coin.dart';
 import 'package:crypto_watcher/pages/coin_info/coin_info.dart';
+import 'package:crypto_watcher/providers/alert_provider.dart';
 import 'package:crypto_watcher/providers/coins.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -10,19 +11,12 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final coins = Provider.of<Coins>(context);
+    final alerts = Provider.of<AlertsProvider>(context);
+
     return SafeArea(
       child: Scaffold(
         backgroundColor: AppColors.backgroundColor,
-        bottomNavigationBar: BottomAppBar(
-          clipBehavior: Clip.antiAlias,
-          shape: CircularNotchedRectangle(),
-          notchMargin: 8.0,
-          child: Container(
-            color: AppColors.backgroundLight,
-            height: 40,
-          ),
-        ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         floatingActionButton: FloatingActionButton(
           tooltip: "Add a coin to your watch list!",
           onPressed: () async {
@@ -62,20 +56,25 @@ class HomePage extends StatelessWidget {
 
                         final coin24hChange =
                             double.parse(coin["changePercent24Hr"]);
-
+                        final percentChangeColor =
+                            coin24hChange < 0 ? Colors.red : Colors.green;
                         return Dismissible(
-                          key: GlobalKey(),
+                          key: UniqueKey(),
                           direction: DismissDirection.endToStart,
                           dismissThresholds: {DismissDirection.endToStart: 0.3},
-                          onDismissed: (_) {
-                            coins.removeCoin(coin["id"], notify: false);
+                          onDismissed: (_) async {
+                            await coins.removeCoin(coin["id"], notify: false);
+                            await alerts.deleteCoinAlerts(coin["id"]);
                           },
                           resizeDuration: Duration(milliseconds: 80),
                           child: ListTile(
                             onTap: () => Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (_) => ChangeNotifierProvider.value(
-                                  value: coins,
+                                builder: (_) => MultiProvider(
+                                  providers: [
+                                    ChangeNotifierProvider.value(value: coins),
+                                    Provider.value(value: alerts),
+                                  ],
                                   child: CoinInfo(
                                     coin["id"],
                                     coinSymbol,
@@ -112,14 +111,24 @@ class HomePage extends StatelessWidget {
                                   '\$$coinUsdPrice',
                                   style: TextStyle(color: Colors.white),
                                 ),
-                                Text(
-                                  '${(coin24hChange < 0 ? "" : "+")}${coin24hChange.toStringAsFixed(2)}',
-                                  style: TextStyle(
-                                    color: coin24hChange < 0
-                                        ? Colors.red
-                                        : Colors.green,
-                                    fontSize: 12,
-                                  ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: <Widget>[
+                                    Text(
+                                      '${(coin24hChange < 0 ? "" : "+")}${coin24hChange.toStringAsFixed(2)}%',
+                                      style: TextStyle(
+                                        color: percentChangeColor,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                    Icon(
+                                      coin24hChange < 0
+                                          ? Icons.arrow_drop_down
+                                          : Icons.arrow_drop_up,
+                                      color: percentChangeColor,
+                                      size: 17,
+                                    )
+                                  ],
                                 )
                               ],
                             ),

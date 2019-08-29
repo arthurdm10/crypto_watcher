@@ -62,7 +62,7 @@ class _AddCoinState extends State<AddCoin> {
             child: Provider.value(
               value: _searchCoinName,
               child: CoinsList(),
-              updateShouldNotify: (prev, cur) => true,
+              updateShouldNotify: (prev, cur) => false,
             ),
           )
         ],
@@ -92,7 +92,7 @@ enum Status { Loading, Done }
 
 class _CoinsListState extends State<CoinsList> {
   static const int LIMIT = 20;
-  Status _status = Status.Loading;
+  Status _status;
 
   final _coins = List<Map<String, dynamic>>();
   var _searchResult = List<Map<String, dynamic>>();
@@ -104,6 +104,7 @@ class _CoinsListState extends State<CoinsList> {
   @override
   void initState() {
     super.initState();
+    _status = Status.Loading;
     Future.delayed(Duration(milliseconds: 100), loadCoins);
   }
 
@@ -140,10 +141,6 @@ class _CoinsListState extends State<CoinsList> {
 
   @override
   Widget build(BuildContext context) {
-    if (_status == Status.Loading) {
-      return Center(child: LoadingIndicator());
-    }
-
     return NotificationListener<ScrollNotification>(
       onNotification: _handleScroll,
       child: ListView.builder(
@@ -156,7 +153,7 @@ class _CoinsListState extends State<CoinsList> {
   bool _handleScroll(scrollInfo) {
     final maxScroll = scrollInfo.metrics.maxScrollExtent;
 
-    if (scrollInfo.metrics.pixels >= maxScroll - (maxScroll * 0.25) &&
+    if (scrollInfo.metrics.pixels >= maxScroll - (maxScroll * 0.3) &&
         _status != Status.Loading) {
       if (_searching) {
         _searchOffset += LIMIT;
@@ -185,7 +182,7 @@ class _CoinsListState extends State<CoinsList> {
     }
 
     final coin = _searching ? _searchResult[index] : _coins[index];
-    final addedCoins = coinsProvider.userCoins;
+    final savedCoins = coinsProvider.userCoins;
     final coinSymbol = coin["symbol"];
     final coinName = coin["name"];
 
@@ -201,7 +198,6 @@ class _CoinsListState extends State<CoinsList> {
       child: SwitchListTile(
         onChanged: (add) {
           if (add) {
-            // coinsProvider.addCoin(coin["id"]);
             coinsProvider.addCoin(coin);
           } else {
             coinsProvider.removeCoin(coin["id"]);
@@ -210,17 +206,21 @@ class _CoinsListState extends State<CoinsList> {
         activeColor: AppColors.secondaryColor,
         inactiveThumbColor: AppColors.backgroundLight,
         value:
-            addedCoins.indexWhere((userCoin) => userCoin["coin_id"] == coin["id"]) !=
+            savedCoins.indexWhere((userCoin) => userCoin["coin_id"] == coin["id"]) !=
                 -1,
         title: Text(
           '$coinName',
-          style:
-              TextStyle(color: AppColors.secondaryDark, fontWeight: FontWeight.w500),
+          style: TextStyle(
+            color: AppColors.secondaryDark,
+            fontWeight: FontWeight.w500,
+          ),
         ),
         subtitle: Text(
           '$coinSymbol',
-          style:
-              TextStyle(color: AppColors.secondaryDark.withAlpha(200), fontSize: 11),
+          style: TextStyle(
+            color: AppColors.secondaryDark.withAlpha(200),
+            fontSize: 11,
+          ),
         ),
         secondary: SizedBox(
           width: 24,

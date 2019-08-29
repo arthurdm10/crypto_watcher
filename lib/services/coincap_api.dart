@@ -84,7 +84,7 @@ class CoincapApi {
     String quoteId,
   }) async {
     final Map<String, String> query = {
-      "exchange": exchangeId ?? '',
+      "exchangeId": exchangeId ?? '',
       "baseId": baseId ?? '',
       "quoteId": quoteId ?? '',
     };

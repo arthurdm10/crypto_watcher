@@ -33,9 +33,13 @@ class _CoinMarketsState extends State<CoinMarkets> {
 
   @override
   void initState() {
+    _loadData();
+    super.initState();
+  }
+
+  _loadData() {
     _coinMarkets = CoincapApi.markets(baseId: widget._coinId).then((response) {
-      List data = response["data"];
-      data.forEach((exchange) {
+      response["data"].forEach((exchange) {
         final exchangeId = exchange["exchangeId"];
 
         if (!exchanges.containsKey(exchangeId)) {
@@ -50,7 +54,6 @@ class _CoinMarketsState extends State<CoinMarkets> {
       widget._onChanged(_selectedCoinPair);
       return exchanges;
     });
-    super.initState();
   }
 
   @override

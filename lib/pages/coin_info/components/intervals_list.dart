@@ -23,7 +23,7 @@ class ChartIntervalList extends StatefulWidget {
 }
 
 class _ChartIntervalListState extends State<ChartIntervalList> {
-  ChartInterval _selected = ChartInterval.h1;
+  ChartInterval _selected = ChartInterval.m15;
 
   @override
   Widget build(BuildContext context) {

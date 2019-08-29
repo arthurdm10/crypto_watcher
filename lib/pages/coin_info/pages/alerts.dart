@@ -1,6 +1,6 @@
 import 'package:crypto_watcher/components/loading_indicator.dart';
 import 'package:crypto_watcher/pages/coin_info/components/coin_markets.dart';
-import 'package:crypto_watcher/providers/alerts.dart';
+import 'package:crypto_watcher/providers/alert_provider.dart';
 import 'package:crypto_watcher/providers/coins.dart';
 import 'package:crypto_watcher/utils.dart';
 import 'package:flutter/material.dart';
@@ -8,17 +8,35 @@ import 'package:provider/provider.dart';
 import 'package:crypto_watcher/styles/colors.dart' as AppColors;
 
 class AlertsPage extends StatelessWidget {
+  static const List _typesStr = [
+    "is above",
+    "is below",
+    "changed by",
+  ];
+
+  final String _coinId;
+  final String _coinSymbol;
+
+  AlertsPage(this._coinId, this._coinSymbol);
+
   @override
   Widget build(BuildContext context) {
-    return Consumer<AlertsProvider>(
-      builder: (context, alertsProvider, _) {
-        if (alertsProvider.status == Status.Loading) {
+    final coins = Provider.of<Coins>(context);
+    final alertsProvider = Provider.of<AlertsProvider>(context);
+
+    return FutureBuilder(
+      future: alertsProvider.getCoinAlerts(_coinId),
+      builder: (context, AsyncSnapshot snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: LoadingIndicator());
         }
+
+        final alerts = snapshot.data;
+
         return Scaffold(
           backgroundColor: AppColors.backgroundColor,
           floatingActionButton: FloatingActionButton(
-            tooltip: "Add an alert to this coin",
+            tooltip: "Create an alert to this coin",
             onPressed: () {
               showDialog(
                   context: context,
@@ -26,9 +44,9 @@ class AlertsPage extends StatelessWidget {
                     return MultiProvider(
                       providers: [
                         Provider.value(value: alertsProvider),
-                        Provider.value(value: Provider.of<Coins>(context)),
+                        Provider.value(value: coins),
                       ],
-                      child: AddAlertDialog(),
+                      child: AddAlertDialog(_coinId, _coinSymbol),
                     );
                   });
             },
@@ -36,9 +54,25 @@ class AlertsPage extends StatelessWidget {
             backgroundColor: AppColors.secondaryDark,
           ),
           body: ListView(
-            children: alertsProvider.alerts.map<Widget>((alert) {
-              return ListTile(
-                title: Text(alert["price"].toString()),
+            children: alerts.map<Widget>((alert) {
+              final type = alert["type"];
+              return Dismissible(
+                key: GlobalKey(),
+                direction: DismissDirection.endToStart,
+                onDismissed: (_) {
+                  alertsProvider.deleteAlert(alert["id"]);
+                },
+                child: ListTile(
+                  title: Text(
+                    'Price ${_typesStr[type]} ${alert["value"]} ' +
+                        (type == 2 ? '%' : '${alert["pair_symbol"]}'),
+                    style: TextStyle(color: AppColors.secondaryColor),
+                  ),
+                  subtitle: Text(
+                    'Every ${alert["interval"]} minutes on ${coins.exchanges[alert["exchange_id"]]["name"]}',
+                    style: TextStyle(color: Colors.white30),
+                  ),
+                ),
               );
             }).toList(),
           ),
@@ -49,11 +83,14 @@ class AlertsPage extends StatelessWidget {
 }
 
 class AddAlertDialog extends StatefulWidget {
+  final String _coinId;
+  final String _coinSymbol;
+
+  AddAlertDialog(this._coinId, this._coinSymbol);
+
   @override
   _AddAlertDialogState createState() => _AddAlertDialogState();
 }
-
-enum AlertType { PriceAbove, PriceBelow, PriceChangeBy }
 
 class _AddAlertDialogState extends State<AddAlertDialog> {
   var _alertType = AlertType.PriceAbove;
@@ -69,130 +106,148 @@ class _AddAlertDialogState extends State<AddAlertDialog> {
       backgroundColor: AppColors.backgroundColor,
       title: Text("Create an alert",
           style: TextStyle(color: Colors.white, fontSize: 15)),
-      content: Container(
-        height: 230,
-        width: 9999,
-        child: DefaultTextStyle(
-          style: TextStyle(color: Colors.white),
-          child: Theme(
-            data: Theme.of(context).copyWith(
-              canvasColor: AppColors.backgroundColor,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Center(
-                  child: CoinMarkets(
-                    alertsProvider.coinSymbol,
-                    alertsProvider.coinId,
-                    onChanged: (exchangeId, pairId, pairData) {
-                      setState(() {
-                        _pairData = pairData;
-                        _inputController.text =
-                            formatQuotePrice(pairData["priceQuote"]);
-                      });
-                    },
-                  ),
-                ),
-                Row(
-                  children: <Widget>[
-                    Text("Alert me when price "),
-                    SizedBox(width: 5),
-                    DropdownButton(
-                      value: _alertType,
-                      onChanged: (value) {
+      content: SingleChildScrollView(
+        child: Container(
+          height: 230,
+          width: 9999,
+          child: DefaultTextStyle(
+            style: TextStyle(color: Colors.white),
+            child: Theme(
+              data: Theme.of(context).copyWith(
+                canvasColor: AppColors.backgroundColor,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Center(
+                    child: CoinMarkets(
+                      widget._coinSymbol,
+                      widget._coinId,
+                      onChanged: (pairData) {
                         setState(() {
-                          _alertType = value;
+                          _pairData = pairData;
                           _inputController.text =
-                              _alertType == AlertType.PriceChangeBy
-                                  ? "5"
-                                  : formatQuotePrice(_pairData["priceQuote"]);
+                              formatQuotePrice(pairData["priceQuote"]);
                         });
                       },
-                      items: [
-                        DropdownMenuItem(
-                          value: AlertType.PriceAbove,
-                          child: Text(
-                            "is above",
-                            style: TextStyle(color: AppColors.secondaryDark),
-                          ),
-                        ),
-                        DropdownMenuItem(
-                          value: AlertType.PriceBelow,
-                          child: Text(
-                            "is below",
-                            style: TextStyle(color: AppColors.secondaryDark),
-                          ),
-                        ),
-                        DropdownMenuItem(
-                          value: AlertType.PriceChangeBy,
-                          child: Text(
-                            "changes by",
-                            style: TextStyle(color: AppColors.secondaryDark),
-                          ),
-                        ),
-                      ],
-                    )
-                  ],
-                ),
-                _buildInputs(),
-                Row(
-                  children: <Widget>[
-                    Text("Check every "),
-                    SizedBox(width: 5),
-                    DropdownButton(
-                      value: _checkInterval,
-                      onChanged: (value) {
-                        setState(() {
-                          _checkInterval = value;
-                        });
-                      },
-                      items: [
-                        DropdownMenuItem(
-                          value: 5,
-                          child: Text(
-                            "5 minutes",
-                            style: TextStyle(color: AppColors.secondaryDark),
-                          ),
-                        ),
-                        DropdownMenuItem(
-                          value: 15,
-                          child: Text(
-                            "15 minutes",
-                            style: TextStyle(color: AppColors.secondaryDark),
-                          ),
-                        ),
-                        DropdownMenuItem(
-                          value: 30,
-                          child: Text(
-                            "30 minutes",
-                            style: TextStyle(color: AppColors.secondaryDark),
-                          ),
-                        ),
-                        DropdownMenuItem(
-                          value: 60,
-                          child: Text(
-                            "1 hour",
-                            style: TextStyle(color: AppColors.secondaryDark),
-                          ),
-                        ),
-                      ],
-                    )
-                  ],
-                ),
-                Center(
-                  child: OutlineButton(
-                    onPressed: () {},
-                    child: Text(
-                      "Save",
-                      style: TextStyle(color: AppColors.secondaryDark),
                     ),
-                    borderSide: BorderSide(color: AppColors.secondaryDark),
-                    shape: StadiumBorder(),
                   ),
-                )
-              ],
+                  Row(
+                    children: <Widget>[
+                      Text("Alert me when price "),
+                      SizedBox(width: 5),
+                      DropdownButton(
+                        value: _alertType,
+                        onChanged: (value) {
+                          setState(() {
+                            _alertType = value;
+                            _inputController.text =
+                                _alertType == AlertType.PriceChangeBy
+                                    ? "5"
+                                    : formatQuotePrice(_pairData["priceQuote"]);
+                          });
+                        },
+                        items: [
+                          DropdownMenuItem(
+                            value: AlertType.PriceAbove,
+                            child: Text(
+                              "is above",
+                              style: TextStyle(color: AppColors.secondaryDark),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: AlertType.PriceBelow,
+                            child: Text(
+                              "is below",
+                              style: TextStyle(color: AppColors.secondaryDark),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: AlertType.PriceChangeBy,
+                            child: Text(
+                              "changes by",
+                              style: TextStyle(color: AppColors.secondaryDark),
+                            ),
+                          ),
+                        ],
+                      )
+                    ],
+                  ),
+                  _buildInputs(),
+                  Row(
+                    children: <Widget>[
+                      Text("Check every "),
+                      SizedBox(width: 5),
+                      DropdownButton(
+                        value: _checkInterval,
+                        onChanged: (value) {
+                          setState(() {
+                            _checkInterval = value;
+                          });
+                        },
+                        items: [
+                          DropdownMenuItem(
+                            value: 5,
+                            child: Text(
+                              "5 minutes",
+                              style: TextStyle(color: AppColors.secondaryDark),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 15,
+                            child: Text(
+                              "15 minutes",
+                              style: TextStyle(color: AppColors.secondaryDark),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 30,
+                            child: Text(
+                              "30 minutes",
+                              style: TextStyle(color: AppColors.secondaryDark),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 60,
+                            child: Text(
+                              "1 hour",
+                              style: TextStyle(color: AppColors.secondaryDark),
+                            ),
+                          ),
+                        ],
+                      )
+                    ],
+                  ),
+                  Center(
+                    child: OutlineButton(
+                      onPressed: () async {
+                        final value = double.parse(_inputController.text);
+
+                        if (_validInput) {
+                          await alertsProvider.addAlert(
+                            _alertType,
+                            _checkInterval,
+                            widget._coinId,
+                            _pairData["exchangeId"],
+                            _pairData["quoteId"],
+                            _pairData["quoteSymbol"],
+                            value,
+                            double.parse(_pairData["priceQuote"]),
+                          );
+                          Navigator.of(context).pop();
+                        }
+                      },
+                      child: Text(
+                        "Save",
+                        style: TextStyle(color: AppColors.secondaryDark),
+                      ),
+                      borderSide: BorderSide(color: AppColors.secondaryDark),
+                      shape: StadiumBorder(),
+                    ),
+                  )
+                ],
+              ),
             ),
           ),
         ),

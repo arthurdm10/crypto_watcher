@@ -1,5 +1,6 @@
 import 'package:crypto_watcher/components/loading_indicator.dart';
 import 'package:crypto_watcher/pages/home.dart';
+import 'package:crypto_watcher/providers/alert_provider.dart';
 import 'package:crypto_watcher/providers/coins.dart';
 import 'package:crypto_watcher/styles/colors.dart' as AppColors;
 import 'package:fl_chart/fl_chart.dart';
@@ -7,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 void main() {
-  Provider.debugCheckInvalidValueType = null;
   runApp(MyApp());
 }
 
@@ -20,16 +20,19 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         backgroundColor: AppColors.backgroundColor,
       ),
-      title: 'Material App',
+      title: 'Crypto Watcher',
       home: FutureBuilder(
         future: coins.loadDb(),
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: LoadingIndicator());
           }
-
-          return ChangeNotifierProvider.value(
-            value: coins,
+          final alerts = AlertsProvider();
+          return MultiProvider(
+            providers: [
+              ChangeNotifierProvider.value(value: coins),
+              Provider.value(value: alerts),
+            ],
             child: HomePage(),
           );
         },

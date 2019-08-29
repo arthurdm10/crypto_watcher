@@ -3,7 +3,7 @@ import 'package:crypto_watcher/pages/coin_info/components/coin_markets.dart';
 import 'package:crypto_watcher/pages/coin_info/components/intervals_list.dart';
 import 'package:crypto_watcher/pages/coin_info/components/pair_data.dart';
 import 'package:crypto_watcher/pages/coin_info/pages/alerts.dart';
-import 'package:crypto_watcher/providers/alerts.dart';
+import 'package:crypto_watcher/providers/alert_provider.dart';
 import 'package:crypto_watcher/providers/coins.dart';
 import 'package:crypto_watcher/styles/colors.dart' as AppColors;
 import 'package:flutter/material.dart';
@@ -54,13 +54,13 @@ class _CoinInfoState extends State<CoinInfo> with SingleTickerProviderStateMixin
         controller: _tabController,
         children: [
           CoinChart(widget._coinId, widget._coinSymbol, widget._coinName),
-          ChangeNotifierProvider(
-            builder: (_) => AlertsProvider(widget._coinId, widget._coinSymbol),
-            child: Provider.value(
-              value: Provider.of<Coins>(context),
-              child: AlertsPage(),
-            ),
-          ),
+          MultiProvider(
+            providers: [
+              Provider.value(value: Provider.of<Coins>(context)),
+              Provider.value(value: Provider.of<AlertsProvider>(context)),
+            ],
+            child: AlertsPage(widget._coinId, widget._coinSymbol),
+          )
         ],
       ),
     );
@@ -102,23 +102,13 @@ class _CoinChartState extends State<CoinChart>
               CoinMarkets(
                 widget._coinSymbol,
                 widget._coinId,
-                onChanged: (data) {
-                  setState(() {
-                    _selectedExchange = data["exchangeId"];
-                    _selectedCoinPair = data["quoteId"];
-                    _pairData = data;
-                  });
-                },
+                onChanged: _onCoinPairChanged,
               ),
               SizedBox(height: 5),
               PairData(_pairData),
               SizedBox(height: 15),
               ChartIntervalList(
-                onSelected: (interval) {
-                  setState(() {
-                    _interval = interval;
-                  });
-                },
+                onSelected: _onChartIntervalChanged,
               ),
               SizedBox(height: 15),
               CandleChart(
@@ -132,5 +122,19 @@ class _CoinChartState extends State<CoinChart>
         ),
       ),
     );
+  }
+
+  _onChartIntervalChanged(interval) {
+    setState(() {
+      _interval = interval;
+    });
+  }
+
+  _onCoinPairChanged(data) {
+    setState(() {
+      _selectedExchange = data["exchangeId"];
+      _selectedCoinPair = data["quoteId"];
+      _pairData = data;
+    });
   }
 }
