@@ -19,8 +19,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  fl_chart: ^0.2.0
-  shared_preferences: 0.5.3+4
   # flutter_candlesticks: ^0.1.4
   flutter_candlesticks:
     path: /home/frost/flutter/flutter-candlesticks
@@ -28,7 +26,6 @@ dependencies:
   provider:
   http:
   sqflite:
-  path:
   flutter_sticky_header: '^0.4.0'
   flutter_local_notifications:
   # The following adds the Cupertino Icons font to your application.

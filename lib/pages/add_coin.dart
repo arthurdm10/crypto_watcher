@@ -1,5 +1,5 @@
 import 'package:crypto_watcher/components/loading_indicator.dart';
-import 'package:crypto_watcher/providers/coins.dart';
+import 'package:crypto_watcher/providers/coins_provider.dart';
 import 'package:crypto_watcher/services/coincap_api.dart';
 import 'package:crypto_watcher/styles/colors.dart' as AppColors;
 import 'package:flutter/material.dart';
@@ -160,14 +160,13 @@ class _CoinsListState extends State<CoinsList> {
       } else {
         _offset += LIMIT;
       }
-
       loadCoins();
     }
     return true;
   }
 
   Widget buildCoinItem(BuildContext context, int index) {
-    final coinsProvider = Provider.of<Coins>(context);
+    final coinsProvider = Provider.of<CoinsProvider>(context);
     if (index == _coins.length) {
       return Center(
         child: Padding(
@@ -212,14 +211,15 @@ class _CoinsListState extends State<CoinsList> {
           '$coinName',
           style: TextStyle(
             color: AppColors.secondaryDark,
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.bold,
           ),
         ),
         subtitle: Text(
           '$coinSymbol',
           style: TextStyle(
-            color: AppColors.secondaryDark.withAlpha(200),
-            fontSize: 11,
+            color: AppColors.secondaryDark.withAlpha(180),
+            fontWeight: FontWeight.w500,
+            fontSize: 12,
           ),
         ),
         secondary: SizedBox(

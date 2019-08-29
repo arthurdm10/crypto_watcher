@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:crypto_watcher/services/coincap_api.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:sqflite/sqflite.dart' as sqlite;
 
-class Coins extends ChangeNotifier {
+class CoinsProvider extends ChangeNotifier {
   static const String DB_NAME = "watcher.db";
+  static const String TABLE_NAME = "user_coins";
 
   List<Map> userCoins;
   Map<String, Map<String, dynamic>> loadedCoins;
@@ -30,6 +30,7 @@ class Coins extends ChangeNotifier {
             type INTEGER NOT NULL,
             interval INTEGER NOT NULL,
             exchange_id TEXT NOT NULL,
+            exchange_name TEXT NOT NULL,
             coin_id TEXT NOT NULL,
             pair_id TEXT NOT NULL,
             pair_symbol TEXT NOT NULL,
@@ -38,7 +39,7 @@ class Coins extends ChangeNotifier {
     ''');
   }
 
-  Coins() {
+  CoinsProvider() {
     CoincapApi.exchanges().then(
       (response) => exchanges = Map.fromIterable(
         response["data"],
@@ -50,38 +51,35 @@ class Coins extends ChangeNotifier {
 
   Future loadDb() async {
     db = await sqlite.openDatabase(DB_NAME, onCreate: _createDb, version: 3);
-    userCoins = await db.query("user_coins");
+    userCoins = await db.query(TABLE_NAME);
   }
 
-  Future fetchCoinsData() async {
+  Future fetchUserCoinsData() async {
     if (userCoins.isNotEmpty) {
       final coinData = await CoincapApi.assets(
-          ids: userCoins.map<String>((coin) => coin["coin_id"]).toList());
+        ids: userCoins.map<String>((coin) => coin["coin_id"]).toList(),
+      );
       return coinData["data"];
     }
     return [];
   }
 
-  Future fetchCoinData(String coinId) async {
-    final coinData = await CoincapApi.assets(assetId: coinId);
-    return coinData["data"];
-  }
-
+  // bad ?
   void refresh() => this.notifyListeners();
 
   void addCoin(Map coin) async {
-    await db.insert("user_coins", {
+    await db.insert(TABLE_NAME, {
       "coin_id": coin["id"],
       "coin_name": coin["name"],
       "coin_symbol": coin["symbol"],
     });
-    userCoins = await db.query("user_coins");
+    userCoins = await db.query(TABLE_NAME);
     notifyListeners();
   }
 
   removeCoin(final String coinId, {final bool notify = true}) async {
-    await db.delete("user_coins", where: "coin_id = ?", whereArgs: [coinId]);
-    userCoins = await db.query("user_coins");
+    await db.delete(TABLE_NAME, where: "coin_id = ?", whereArgs: [coinId]);
+    userCoins = await db.query(TABLE_NAME);
     if (notify) {
       notifyListeners();
     }

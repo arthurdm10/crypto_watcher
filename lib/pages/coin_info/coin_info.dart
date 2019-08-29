@@ -4,7 +4,7 @@ import 'package:crypto_watcher/pages/coin_info/components/intervals_list.dart';
 import 'package:crypto_watcher/pages/coin_info/components/pair_data.dart';
 import 'package:crypto_watcher/pages/coin_info/pages/alerts.dart';
 import 'package:crypto_watcher/providers/alert_provider.dart';
-import 'package:crypto_watcher/providers/coins.dart';
+import 'package:crypto_watcher/providers/coins_provider.dart';
 import 'package:crypto_watcher/styles/colors.dart' as AppColors;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -22,10 +22,12 @@ class CoinInfo extends StatefulWidget {
 
 class _CoinInfoState extends State<CoinInfo> with SingleTickerProviderStateMixin {
   TabController _tabController;
+  String _coinSymbol;
 
   @override
   void initState() {
     _tabController = TabController(length: 2, vsync: this);
+    _coinSymbol = widget._coinSymbol;
     super.initState();
   }
 
@@ -39,7 +41,7 @@ class _CoinInfoState extends State<CoinInfo> with SingleTickerProviderStateMixin
         leading: SizedBox(
           width: 20,
           height: 20,
-          child: Image.asset('assets/icons/${widget._coinSymbol.toLowerCase()}.png'),
+          child: Image.asset('assets/icons/${_coinSymbol.toLowerCase()}.png'),
         ),
         bottom: TabBar(
           controller: _tabController,
@@ -53,13 +55,13 @@ class _CoinInfoState extends State<CoinInfo> with SingleTickerProviderStateMixin
       body: TabBarView(
         controller: _tabController,
         children: [
-          CoinChart(widget._coinId, widget._coinSymbol, widget._coinName),
+          CoinChart(widget._coinId, _coinSymbol, widget._coinName),
           MultiProvider(
             providers: [
-              Provider.value(value: Provider.of<Coins>(context)),
+              Provider.value(value: Provider.of<CoinsProvider>(context)),
               Provider.value(value: Provider.of<AlertsProvider>(context)),
             ],
-            child: AlertsPage(widget._coinId, widget._coinSymbol),
+            child: AlertsPage(widget._coinId, _coinSymbol),
           )
         ],
       ),

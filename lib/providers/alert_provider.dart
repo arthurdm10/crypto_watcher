@@ -38,6 +38,7 @@ class AlertsProvider {
     int interval,
     String coinId,
     String exchangeId,
+    String exchangeName,
     String pairId,
     String pairSymbol,
     double value,
@@ -52,6 +53,7 @@ class AlertsProvider {
       "value": value,
       "current_value": currentValue,
       "exchange_id": exchangeId,
+      "exchange_name": exchangeName,
     };
     final alertId = await _db.insert(TABLE_NAME, alertData);
     alertData["id"] = alertId;
@@ -106,34 +108,35 @@ class AlertsProvider {
     final coinData = response["data"][0];
     final price = double.parse(coinData["priceQuote"]);
     final alertType = AlertType.values[alertData["type"]];
+    final double value = alertData["value"];
+    final String coinId = alertData["coin_id"];
+    final String pairSymbol = alertData["pair_symbol"];
+
     bool completed = false;
     String msg;
 
     switch (alertType) {
       case AlertType.PriceAbove:
-        completed = (price > alertData["value"]);
-        msg =
-            '${alertData["coin_id"]} is above ${alertData["value"]} ${alertData["pair_symbol"]} ';
+        completed = (price > value);
+        msg = '$coinId is above $value $pairSymbol ';
         break;
       case AlertType.PriceBelow:
-        completed = (price < alertData["value"]);
-        msg =
-            '${alertData["coin_id"]} is below ${alertData["value"]} ${alertData["pair_symbol"]} ';
+        completed = (price < value);
+        msg = '$coinId is below $value $pairSymbol ';
         break;
       case AlertType.PriceChangeBy:
-        final percentValue = alertData["value"];
+        final percentValue = value;
         final currentPrice = alertData["current_value"];
         final percentPrice = currentPrice + currentPrice * (percentValue / 100);
 
         completed = (price >= percentPrice || price <= percentPrice);
-        msg =
-            '${alertData["coin_id"]} changed by ${alertData["value"]}%, it\'s $price ${alertData["pair_symbol"]} !';
+        msg = '$coinId changed by $value%, it\'s $price $pairSymbol !';
         break;
     }
 
     if (completed) {
       await _showNotification(
-        "Crypto Watcher",
+        '${coinId.toUpperCase()} on ${alertData["exchange_name"]}',
         msg,
       );
     }

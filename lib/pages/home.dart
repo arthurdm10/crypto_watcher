@@ -2,7 +2,7 @@ import 'package:crypto_watcher/components/loading_indicator.dart';
 import 'package:crypto_watcher/pages/add_coin.dart';
 import 'package:crypto_watcher/pages/coin_info/coin_info.dart';
 import 'package:crypto_watcher/providers/alert_provider.dart';
-import 'package:crypto_watcher/providers/coins.dart';
+import 'package:crypto_watcher/providers/coins_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:crypto_watcher/styles/colors.dart' as AppColors;
@@ -10,7 +10,7 @@ import 'package:crypto_watcher/styles/colors.dart' as AppColors;
 class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final coins = Provider.of<Coins>(context);
+    final coins = Provider.of<CoinsProvider>(context);
     final alerts = Provider.of<AlertsProvider>(context);
 
     return SafeArea(
@@ -35,7 +35,7 @@ class HomePage extends StatelessWidget {
         body: Container(
           margin: const EdgeInsets.only(top: 15),
           child: FutureBuilder(
-            future: coins.fetchCoinsData(),
+            future: coins.fetchUserCoinsData(),
             builder: (BuildContext context, AsyncSnapshot snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return Center(child: LoadingIndicator());
@@ -56,8 +56,11 @@ class HomePage extends StatelessWidget {
 
                         final coin24hChange =
                             double.parse(coin["changePercent24Hr"]);
+                        final coinChangeDecrease = coin24hChange < 0;
+
                         final percentChangeColor =
-                            coin24hChange < 0 ? Colors.red : Colors.green;
+                            coinChangeDecrease ? Colors.red : Colors.green;
+
                         return Dismissible(
                           key: UniqueKey(),
                           direction: DismissDirection.endToStart,
@@ -101,7 +104,7 @@ class HomePage extends StatelessWidget {
                               width: 24,
                               height: 24,
                               child: Image.asset(
-                                  'assets/icons/${coin["symbol"].toLowerCase()}.png'),
+                                  'assets/icons/${coinSymbol.toLowerCase()}.png'),
                             ),
                             trailing: Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
@@ -115,14 +118,14 @@ class HomePage extends StatelessWidget {
                                   mainAxisSize: MainAxisSize.min,
                                   children: <Widget>[
                                     Text(
-                                      '${(coin24hChange < 0 ? "" : "+")}${coin24hChange.toStringAsFixed(2)}%',
+                                      '${(coinChangeDecrease ? "" : "+")}${coin24hChange.toStringAsFixed(2)}%',
                                       style: TextStyle(
                                         color: percentChangeColor,
                                         fontSize: 12,
                                       ),
                                     ),
                                     Icon(
-                                      coin24hChange < 0
+                                      coinChangeDecrease
                                           ? Icons.arrow_drop_down
                                           : Icons.arrow_drop_up,
                                       color: percentChangeColor,

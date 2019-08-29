@@ -10,8 +10,6 @@ class ApiRequest {
   String _body;
   Map<String, String> _queryParams, _headers = Map();
 
-  ApiRequest();
-
   ApiRequest get() {
     this._method = "GET";
     return this;
@@ -49,6 +47,7 @@ class ApiRequest {
 
   Future<http.Response> send() {
     assert(_path != null);
+    assert(_method != null);
 
     final httpUrl = Uri.https(_baseUrl, _path, _queryParams);
     var response;

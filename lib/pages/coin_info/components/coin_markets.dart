@@ -1,4 +1,4 @@
-import 'package:crypto_watcher/providers/coins.dart';
+import 'package:crypto_watcher/providers/coins_provider.dart';
 import 'package:crypto_watcher/services/coincap_api.dart';
 import 'package:crypto_watcher/utils.dart';
 import 'package:flutter/material.dart';
@@ -58,7 +58,7 @@ class _CoinMarketsState extends State<CoinMarkets> {
 
   @override
   Widget build(BuildContext context) {
-    final coinsProvider = Provider.of<Coins>(context);
+    final coinsProvider = Provider.of<CoinsProvider>(context);
 
     return FutureBuilder(
       future: _coinMarkets,
@@ -70,6 +70,8 @@ class _CoinMarketsState extends State<CoinMarkets> {
         final exchangeName = coinsProvider.exchanges[_selectedExchange]["name"];
         final coinPairSymbol = _selectedCoinPair["quoteSymbol"];
 
+        final screenWidth = MediaQuery.of(context).size.width;
+
         return GestureDetector(
           onTap: () {
             _showMarketsDialog(context, coinsProvider);
@@ -79,13 +81,15 @@ class _CoinMarketsState extends State<CoinMarkets> {
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.all(5),
-                  margin:
-                      const EdgeInsets.symmetric(vertical: 4.0, horizontal: 60.0),
+                  margin: EdgeInsets.symmetric(
+                      vertical: 1.0, horizontal: screenWidth * 0.1),
                   decoration: BoxDecoration(
                     color: AppColors.backgroundColor,
                     border: Border(
-                      bottom:
-                          BorderSide(color: AppColors.backgroundLight, width: 0.5),
+                      bottom: BorderSide(
+                        color: AppColors.backgroundLight,
+                        width: 0.5,
+                      ),
                     ),
                   ),
                   child: Center(
@@ -119,7 +123,7 @@ class _CoinMarketsState extends State<CoinMarkets> {
     );
   }
 
-  _showMarketsDialog(BuildContext context, Coins coinsProvider) {
+  _showMarketsDialog(BuildContext context, CoinsProvider coinsProvider) {
     showDialog(
       context: context,
       builder: (context) {
@@ -147,7 +151,7 @@ class _CoinMarketsState extends State<CoinMarkets> {
     );
   }
 
-  Widget _buildSliverList(String exchangeId, Coins coinsProvider) {
+  Widget _buildSliverList(String exchangeId, CoinsProvider coinsProvider) {
     return SliverStickyHeader(
       header: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 5),

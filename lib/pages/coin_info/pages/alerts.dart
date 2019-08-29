@@ -1,7 +1,7 @@
 import 'package:crypto_watcher/components/loading_indicator.dart';
 import 'package:crypto_watcher/pages/coin_info/components/coin_markets.dart';
 import 'package:crypto_watcher/providers/alert_provider.dart';
-import 'package:crypto_watcher/providers/coins.dart';
+import 'package:crypto_watcher/providers/coins_provider.dart';
 import 'package:crypto_watcher/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -21,7 +21,7 @@ class AlertsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final coins = Provider.of<Coins>(context);
+    final coins = Provider.of<CoinsProvider>(context);
     final alertsProvider = Provider.of<AlertsProvider>(context);
 
     return FutureBuilder(
@@ -135,42 +135,48 @@ class _AddAlertDialogState extends State<AddAlertDialog> {
                   ),
                   Row(
                     children: <Widget>[
-                      Text("Alert me when price "),
+                      Flexible(
+                        fit: FlexFit.loose,
+                        child: Text("Alert me when price "),
+                      ),
                       SizedBox(width: 5),
-                      DropdownButton(
-                        value: _alertType,
-                        onChanged: (value) {
-                          setState(() {
-                            _alertType = value;
-                            _inputController.text =
-                                _alertType == AlertType.PriceChangeBy
-                                    ? "5"
-                                    : formatQuotePrice(_pairData["priceQuote"]);
-                          });
-                        },
-                        items: [
-                          DropdownMenuItem(
-                            value: AlertType.PriceAbove,
-                            child: Text(
-                              "is above",
-                              style: TextStyle(color: AppColors.secondaryDark),
+                      Flexible(
+                        fit: FlexFit.loose,
+                        child: DropdownButton(
+                          value: _alertType,
+                          onChanged: (value) {
+                            setState(() {
+                              _alertType = value;
+                              _inputController.text =
+                                  _alertType == AlertType.PriceChangeBy
+                                      ? "5"
+                                      : formatQuotePrice(_pairData["priceQuote"]);
+                            });
+                          },
+                          items: [
+                            DropdownMenuItem(
+                              value: AlertType.PriceAbove,
+                              child: Text(
+                                "is above",
+                                style: TextStyle(color: AppColors.secondaryDark),
+                              ),
                             ),
-                          ),
-                          DropdownMenuItem(
-                            value: AlertType.PriceBelow,
-                            child: Text(
-                              "is below",
-                              style: TextStyle(color: AppColors.secondaryDark),
+                            DropdownMenuItem(
+                              value: AlertType.PriceBelow,
+                              child: Text(
+                                "is below",
+                                style: TextStyle(color: AppColors.secondaryDark),
+                              ),
                             ),
-                          ),
-                          DropdownMenuItem(
-                            value: AlertType.PriceChangeBy,
-                            child: Text(
-                              "changes by",
-                              style: TextStyle(color: AppColors.secondaryDark),
+                            DropdownMenuItem(
+                              value: AlertType.PriceChangeBy,
+                              child: Text(
+                                "changes by",
+                                style: TextStyle(color: AppColors.secondaryDark),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       )
                     ],
                   ),
@@ -187,6 +193,13 @@ class _AddAlertDialogState extends State<AddAlertDialog> {
                           });
                         },
                         items: [
+                          DropdownMenuItem(
+                            value: 1,
+                            child: Text(
+                              "1 minute",
+                              style: TextStyle(color: AppColors.secondaryDark),
+                            ),
+                          ),
                           DropdownMenuItem(
                             value: 5,
                             child: Text(
@@ -222,14 +235,17 @@ class _AddAlertDialogState extends State<AddAlertDialog> {
                   Center(
                     child: OutlineButton(
                       onPressed: () async {
-                        final value = double.parse(_inputController.text);
-
                         if (_validInput) {
+                          final value = double.parse(_inputController.text);
+                          final exchangeName = Provider.of<CoinsProvider>(context)
+                              .exchanges[_pairData["exchangeId"]]["name"];
+
                           await alertsProvider.addAlert(
                             _alertType,
                             _checkInterval,
                             widget._coinId,
                             _pairData["exchangeId"],
+                            exchangeName,
                             _pairData["quoteId"],
                             _pairData["quoteSymbol"],
                             value,
